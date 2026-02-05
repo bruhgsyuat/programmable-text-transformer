@@ -1,16 +1,215 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Programmable Text Transformer</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --panel: #f4f7fb;
+        --text: #111827;
+        --muted: #4b5563;
+        --accent: #2563eb;
+        --border: #d1d5db;
+        --danger: #b91c1c;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b1020;
+          --panel: #151b2f;
+          --text: #e5e7eb;
+          --muted: #9ca3af;
+          --accent: #60a5fa;
+          --border: #374151;
+          --danger: #fca5a5;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+        font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        display: grid;
+        min-height: 100vh;
+        place-items: center;
+        padding: 2rem 1rem;
+      }
+
+      main {
+        width: min(820px, 100%);
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 1.25rem;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+      }
+
+      h1 {
+        margin: 0 0 0.5rem;
+      }
+
+      p {
+        color: var(--muted);
+      }
+
+      label {
+        display: block;
+        margin: 1rem 0 0.45rem;
+        font-weight: 600;
+      }
+
+      textarea,
+      input {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--bg);
+        color: var(--text);
+        padding: 0.75rem;
+        font-size: 0.95rem;
+      }
+
+      textarea {
+        min-height: 150px;
+        resize: vertical;
+      }
+
+      .row {
+        display: flex;
+        gap: 0.65rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+      }
+
+      button {
+        border: 1px solid var(--accent);
+        background: var(--accent);
+        color: white;
+        border-radius: 10px;
+        padding: 0.6rem 1rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      button.secondary {
+        background: transparent;
+        color: var(--accent);
+      }
+
+      pre {
+        margin-top: 1rem;
+        padding: 0.8rem;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        white-space: pre-wrap;
+        min-height: 3.5rem;
+      }
+
+      .error {
+        color: var(--danger);
+        font-weight: 600;
+      }
+
+      hr {
+        border: 0;
+        border-top: 1px solid var(--border);
+        margin: 1.5rem 0;
+      }
+
+      .small {
+        font-size: 0.85rem;
+      }
+
+      code {
+        background: rgba(127, 127, 127, 0.2);
+        border-radius: 5px;
+        padding: 0 4px;
+      }
+    </style>
+  </head>
   <body>
-    <!-- placeholder design -->
-    <textarea placeholder="Input code here..."></textarea>
-    <input type="text" placeholder="Insert text here....">
-    <button>Convert!</button>
-    <p id="output"></p>
-    <hr>
-    <h1>The """Release""" Notes</h1>
-    <p>Released: 5th February 2026</p>
-    <ul>
-      <li>This isn't beta or alpha anymore, this is in the gamma stage.</li>
-    </ul>
+    <main>
+      <h1>Programmable Text Transformer</h1>
+      <p>
+        Write a JavaScript transform body below. Use <code>text</code> as input and
+        <code>return</code> the output.
+      </p>
+
+      <label for="transformCode">Transform code</label>
+      <textarea id="transformCode" spellcheck="false">// Example
+return text
+  .trim()
+  .toUpperCase()
+  .replaceAll(" ", "-");</textarea>
+
+      <label for="inputText">Input text</label>
+      <input id="inputText" type="text" placeholder="Type text to transform..." value="hello programmable world" />
+
+      <div class="row">
+        <button id="convertBtn" type="button">Convert</button>
+        <button id="resetBtn" type="button" class="secondary">Load example</button>
+      </div>
+
+      <label for="output">Output</label>
+      <pre id="output" aria-live="polite"></pre>
+      <p id="error" class="error" role="alert"></p>
+
+      <hr />
+      <h2>The """Release""" Notes</h2>
+      <p class="small">Released: 5th February 2026</p>
+      <ul>
+        <li>This isn't beta or alpha anymore, this is in the gamma stage.</li>
+      </ul>
+    </main>
+
+    <script>
+      const exampleCode = `// Example
+return text
+  .trim()
+  .toUpperCase()
+  .replaceAll(" ", "-");`;
+
+      const codeEl = document.getElementById("transformCode");
+      const inputEl = document.getElementById("inputText");
+      const outputEl = document.getElementById("output");
+      const errorEl = document.getElementById("error");
+      const convertBtn = document.getElementById("convertBtn");
+      const resetBtn = document.getElementById("resetBtn");
+
+      function runTransform() {
+        errorEl.textContent = "";
+
+        try {
+          const transformer = new Function("text", codeEl.value);
+          const result = transformer(inputEl.value);
+          outputEl.textContent = String(result ?? "");
+        } catch (error) {
+          outputEl.textContent = "";
+          errorEl.textContent = `Transform error: ${error.message}`;
+        }
+      }
+
+      convertBtn.addEventListener("click", runTransform);
+      inputEl.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          runTransform();
+        }
+      });
+      resetBtn.addEventListener("click", () => {
+        codeEl.value = exampleCode;
+        runTransform();
+      });
+
+      runTransform();
+    </script>
   </body>
 </html>
